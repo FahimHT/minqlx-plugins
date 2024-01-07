@@ -4,6 +4,7 @@ import threading
 import discord
 from discord.ext import commands
 import asyncio
+import json
 
 
 VERSION = "1.0"
@@ -78,7 +79,7 @@ class discordbot(minqlx.Plugin):
         self.add_hook("player_disconnect", self.handle_player_disconnect)
         self.add_hook("chat", self.handle_chat)
         self.add_hook("unload", self.handle_unload)
-        self.add_hook("player_loaded", self.player_loaded)
+        self.add_hook("player_loaded", self.handle_player_loaded)
 
         self.add_command("discord", self.cmd_to_discord, usage="<message>")
 
@@ -138,9 +139,8 @@ class discordbot(minqlx.Plugin):
 
 
     def handle_unload(self, plugin):
-        if plugin == self.__class__.__name__:
-            asyncio.run_coroutine_threadsafe(self.async_bot.change_presence(status=discord.Status.offline), loop=self.async_bot.loop)
-            asyncio.run_coroutine_threadsafe(self.async_bot.close(), loop=self.async_bot.loop)
+        asyncio.run_coroutine_threadsafe(self.bot_thread.async_bot.change_presence(status=discord.Status.offline), loop=self.bot_thread.async_bot.loop)
+        asyncio.run_coroutine_threadsafe(self.bot_thread.async_bot.close(), loop=self.bot_thread.async_bot.loop)
     
 
     def cmd_to_discord(self, player, msg, channel):
@@ -166,7 +166,7 @@ class discordbot(minqlx.Plugin):
 
     @minqlx.delay(5)
     @minqlx.thread
-    def player_loaded(self, player):
+    def handle_player_loaded(self, player):
         if player.steam_id == minqlx.owner():
             self.check_version(player=player)
 
