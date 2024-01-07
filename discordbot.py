@@ -45,7 +45,7 @@ class BotThread(threading.Thread):
         asyncio.set_event_loop(loop)
         intents = discord.Intents.default()
         intents.messages = True
-        self.async_bot = commands.Bot(command_prefix='.', loop=loop, intents = intents)
+        self.async_bot = commands.Bot(command_prefix='.', loop=loop, intents=intents)
         self.async_bot.add_cog(AsyncBot(self.async_bot, self.discord_plugin))
         loop.run_until_complete(self.async_bot.start(self.discord_plugin.discord_bot_token))
         
