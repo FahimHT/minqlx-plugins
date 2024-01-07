@@ -27,7 +27,6 @@ class AsyncBot(commands.Cog):
         await ctx.send(content)
 
 
-    @commands.is_owner()
     @commands.command(name="ver")
     async def check_version(self, ctx):
         content = self.discord_plugin.check_version()
