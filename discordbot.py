@@ -155,7 +155,8 @@ class discordbot(minqlx.Plugin):
 
     def get_server_status(self):
         count = len(self.players())
-        content = "Server: {}\nMap: {}, Status: {}\nPlayers: {}".format(self.game.hostname, self.game.map_title, self.game.state, count)
+        game_state = self.game.state.capitalize().replace("_", " ")
+        content = "Server: {}\nMap: {}, Status: {}\nPlayers: {}".format(self.game.hostname, self.game.map_title, game_state, count)
 
         if count > 0:
             names = {self.clean_text(x.name) for x in self.players()}
