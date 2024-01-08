@@ -7,7 +7,7 @@ import asyncio
 import json
 
 
-VERSION = "1.0"
+VERSION = "1.1"
 
 
 class AsyncBot(commands.Cog):
@@ -18,7 +18,8 @@ class AsyncBot(commands.Cog):
 
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
-        await ctx.send(error)
+        if await self.bot.is_owner(ctx.message.author):
+            await ctx.send(error)
 
 
     @commands.command(name="ql")
@@ -173,7 +174,8 @@ class discordbot(minqlx.Plugin):
     # Adapted from https://github.com/BarelyMiSSeD/minqlx-plugins/blob/master/listmaps.py
     def check_version(self, player=None):
         with self.lock:
-            content = "Could not retrieve version from repository"
+            server = "Server: {} - ".format(self.game.hostname)
+            content = "{}Could not retrieve {} version from repository".format(server, self.__class__.__name__)
             url = "https://raw.githubusercontent.com/FahimHT/minqlx-plugins/master/discordbot.py"
             res = requests.get(url)
 
@@ -187,17 +189,17 @@ class discordbot(minqlx.Plugin):
                         line = line.replace(b"\"", b"")
                         
                         if VERSION.encode() != line:
-                            msg1 = "New version {} is available for {}, current version is {}".format(line.decode(), self.__class__.__name__, VERSION)
+                            msg1 = "{} current version {} is different from repository version {}".format(self.__class__.__name__, VERSION, line.decode())
                             msg2 = "See https://github.com/FahimHT/minqlx-plugins"
-
+                            
                             if player:
                                 player.tell(msg1)
                                 player.tell(msg2)
                             
-                            content = "{}\n{}".format(msg1, msg2)
+                            content = "{}{}\n{}".format(server, msg1, msg2)
                             return content
                         else:
-                            content = "Currently running the latest version {}".format(VERSION)
+                            content = "{}Currently running {} version {} (latest)".format(server, self.__class__.__name__, VERSION)
                             return content
             except Exception as e:
                 message = "{}, message: {}".format(content, e)
