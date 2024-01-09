@@ -19,7 +19,9 @@ class AsyncBot(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if await self.bot.is_owner(ctx.message.author):
-            await ctx.send(error)
+            server = self.discord_plugin.get_server_name() or "N/A"
+            content = "{}\n>>> {}".format(server, error)
+            await ctx.send(content)
 
 
     @commands.command(name="ql")
@@ -156,7 +158,7 @@ class discordbot(minqlx.Plugin):
     def get_server_status(self):
         count = len(self.players())
         game_state = self.game.state.capitalize().replace("_", " ")
-        content = "Server: {}\nMap: {}, Status: {}\nPlayers: {}".format(self.game.hostname, self.game.map_title, game_state, count)
+        content = "Server: {}\n>>> Map: {}, Status: {}\nPlayers: {}".format(self.game.hostname, self.game.map_title, game_state, count)
 
         if count > 0:
             names = {self.clean_text(x.name) for x in self.players()}
@@ -175,8 +177,8 @@ class discordbot(minqlx.Plugin):
     # Adapted from https://github.com/BarelyMiSSeD/minqlx-plugins/blob/master/listmaps.py
     def check_version(self, player=None):
         with self.lock:
-            server = "Server: {} - ".format(self.game.hostname)
-            content = "{}Could not retrieve {} version from repository".format(server, self.__class__.__name__)
+            server = "Server: {}\n".format(self.game.hostname)
+            content = "{}>>> Could not retrieve {} version from repository".format(server, self.__class__.__name__)
             url = "https://raw.githubusercontent.com/FahimHT/minqlx-plugins/master/discordbot.py"
             res = requests.get(url)
 
@@ -197,10 +199,10 @@ class discordbot(minqlx.Plugin):
                                 player.tell(msg1)
                                 player.tell(msg2)
                             
-                            content = "{}{}\n{}".format(server, msg1, msg2)
+                            content = "{}>>> {}\n{}".format(server, msg1, msg2)
                             return content
                         else:
-                            content = "{}Currently running {} version {} (latest)".format(server, self.__class__.__name__, VERSION)
+                            content = "{}>>> Currently running {} version {} (latest)".format(server, self.__class__.__name__, VERSION)
                             return content
             except Exception as e:
                 message = "{}, message: {}".format(content, e)
@@ -209,6 +211,10 @@ class discordbot(minqlx.Plugin):
 
             return content
 
+
+    def get_server_name(self):
+        return self.game.hostname
+                      
 
     @minqlx.thread
     def send_message(self, channel_id, message):
