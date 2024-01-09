@@ -2,7 +2,9 @@
 
 ## Requirements
 
-The plug-in(s) are tested on `Python 3.7`. Required libraries listed in `requirements.txt` should be installed by running the following command in the `minqlx-plugins` folder:
+The plug-in(s) are tested on the following python versions: `3.5.3, 3.7.3, 3.10.12, 3.11.4`.
+
+Required libraries listed in `requirements.txt` should be installed by running the following command in the `minqlx-plugins` folder:
 ```
 python3 -m pip install -r requirements.txt
 ```
