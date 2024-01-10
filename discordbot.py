@@ -7,7 +7,7 @@ import asyncio
 import json
 
 
-VERSION = "1.1"
+VERSION = "1.2"
 
 
 class AsyncBot(commands.Cog):
@@ -19,21 +19,20 @@ class AsyncBot(commands.Cog):
     @commands.Cog.listener()
     async def on_command_error(self, ctx, error):
         if await self.bot.is_owner(ctx.message.author):
-            server = self.discord_plugin.get_server_name() or "N/A"
-            content = "{}\n>>> {}".format(server, error)
-            await ctx.send(content)
+            message = self.discord_plugin.get_formatted_message(error)
+            await ctx.send(message)
 
 
     @commands.command(name="ql")
-    async def send_server_status(self, ctx):
-        content = self.discord_plugin.get_server_status()
-        await ctx.send(content)
+    async def get_server_status(self, ctx):
+        message = self.discord_plugin.get_server_status()
+        await ctx.send(message)
 
 
     @commands.command(name="ver")
     async def check_version(self, ctx):
-        content = self.discord_plugin.check_version()
-        await ctx.send(content)
+        message = self.discord_plugin.check_version()
+        await ctx.send(message)
 
 
 class BotThread(threading.Thread):
@@ -83,7 +82,7 @@ class discordbot(minqlx.Plugin):
         self.add_hook("unload", self.handle_unload)
         self.add_hook("player_loaded", self.handle_player_loaded)
 
-        self.add_command("discord", self.cmd_to_discord, usage="<message>")
+        self.add_command("discord", self.command_to_discord, usage="<message>")
 
         if self.discord_channel_id_str:
             self.discord_channel_ids = {item for item in self.discord_channel_id_str.split(',') if item.strip()}
@@ -96,11 +95,12 @@ class discordbot(minqlx.Plugin):
 
     def handle_game_end(self, *args, **kwargs):
         with self.lock:
-            content = "Game ended."
+            message = "Game ended."
             if self.game.red_score is not None and self.game.blue_score is not None:
                 if self.game.red_score >= 0 and self.game.blue_score >= 0:
-                    content += " Result: Red {} - Blue {}.".format(self.game.red_score, self.game.blue_score)
-            self.send_message(self.discord_channel_ids, content)
+                    message += " Result: Red {} - Blue {}.".format(self.game.red_score, self.game.blue_score)
+            
+            self.send_message(self.discord_channel_ids, message)
 
 
     def handle_chat(self, player, msg, channel):
@@ -108,8 +108,8 @@ class discordbot(minqlx.Plugin):
             if self.discord_chat_channel_id_str and ("chat" == channel.name or "spectator_chat" == channel.name):
                 message = self.clean_text(msg)
                 if not message.startswith(self.discord_cmd_prefix):
-                    content = "{} says: {}".format(self.clean_text(player.name), message)
-                    self.send_message(self.discord_chat_channel_ids, content)
+                    message = "{} says: {}".format(self.clean_text(player.name), message)
+                    self.send_message(self.discord_chat_channel_ids, message)
 
 
     def handle_player_connect(self, player):
@@ -118,8 +118,8 @@ class discordbot(minqlx.Plugin):
 
             if player_name not in self.player_names:
                 self.player_names.add(player_name)
-                content = "{} connected. Current players: {}.".format(player_name, len(self.player_names))
-                self.send_message(self.discord_channel_ids, content)
+                message = "{} connected. Current players: {}.".format(player_name, len(self.player_names))
+                self.send_message(self.discord_channel_ids, message)
 
 
     def handle_player_disconnect(self, player, reason):
@@ -128,16 +128,16 @@ class discordbot(minqlx.Plugin):
 
             if player_name in self.player_names:
                 self.player_names.discard(player_name)
-                content = "{} disconnected. Current players: {}.".format(player_name, len(self.player_names))
-                self.send_message(self.discord_channel_ids, content)
+                message = "{} disconnected. Current players: {}.".format(player_name, len(self.player_names))
+                self.send_message(self.discord_channel_ids, message)
 
 
     def handle_game_start(self, *args, **kwargs):
         with self.lock:
             if self.players() is not None:
                 self.player_names = {self.clean_text(x.name) for x in self.players()}
-                content = "Game started, map: {}, players: {}.".format(self.game.map_title, len(self.player_names))
-                self.send_message(self.discord_channel_ids, content)
+                message = "Game started, map: {}, players: {}.".format(self.game.map_title, len(self.player_names))
+                self.send_message(self.discord_channel_ids, message)
 
 
     def handle_unload(self, plugin):
@@ -145,26 +145,27 @@ class discordbot(minqlx.Plugin):
         asyncio.run_coroutine_threadsafe(self.bot_thread.async_bot.close(), loop=self.bot_thread.async_bot.loop)
     
 
-    def cmd_to_discord(self, player, msg, channel):
+    def command_to_discord(self, player, msg, channel):
         with self.lock:
             if len(msg) < 2:
                 return minqlx.RET_USAGE
 
             message = " ".join(msg[1:])
-            content = "{} says: {}".format(self.clean_text(player.name), self.clean_text(message))
-            self.send_message(self.discord_channel_ids, content)
+            message = "{} says: {}".format(self.clean_text(player.name), self.clean_text(message))
+            self.send_message(self.discord_channel_ids, message)
 
 
     def get_server_status(self):
         count = len(self.players())
         game_state = self.game.state.capitalize().replace("_", " ")
-        content = "Server: {}\n>>> Map: {}, Status: {}\nPlayers: {}".format(self.game.hostname, self.game.map_title, game_state, count)
+        message = "Map: {}, Status: {}\nPlayers: {}".format(self.game.map_title, game_state, count)
 
         if count > 0:
-            names = {self.clean_text(x.name) for x in self.players()}
-            content += ", (" + ", ".join(names) + ")"
-        content += "\n"
-        return content
+            names = {self.clean_text(player.name) for player in self.players()}
+            message += ", (" + ", ".join(names) + ")"
+
+        message = self.get_formatted_message("{}\n".format(message))
+        return message
 
 
     @minqlx.delay(5)
@@ -177,50 +178,51 @@ class discordbot(minqlx.Plugin):
     # Adapted from https://github.com/BarelyMiSSeD/minqlx-plugins/blob/master/listmaps.py
     def check_version(self, player=None):
         with self.lock:
-            server = "Server: {}\n".format(self.game.hostname)
-            content = "{}>>> Could not retrieve {} version from repository".format(server, self.__class__.__name__)
+            message = "Could not retrieve {} version from repository".format(self.__class__.__name__)
             url = "https://raw.githubusercontent.com/FahimHT/minqlx-plugins/master/discordbot.py"
             res = requests.get(url)
 
             if requests.codes.ok != res.status_code:
-                return "{}, response: {}".format(content, res.status_code)
+                message = "{}, response: {}".format(message, res.status_code)
             
-            try:
-                for line in res.iter_lines():
-                    if line.startswith(b"VERSION"):
-                        line = line.replace(b"VERSION = ", b"")
-                        line = line.replace(b"\"", b"")
-                        
-                        if VERSION.encode() != line:
-                            msg1 = "{} current version {} is different from repository version {}".format(self.__class__.__name__, VERSION, line.decode())
-                            msg2 = "See https://github.com/FahimHT/minqlx-plugins"
+            else:
+                try:
+                    for line in res.iter_lines():
+                        if line.startswith(b"VERSION"):
+                            line = line.replace(b"VERSION = ", b"")
+                            line = line.replace(b"\"", b"")
                             
-                            if player:
-                                player.tell(msg1)
-                                player.tell(msg2)
+                            if VERSION.encode() != line:
+                                msg1 = "{} current version {} is different from repository version {}".format(self.__class__.__name__, VERSION, line.decode())
+                                msg2 = "See https://github.com/FahimHT/minqlx-plugins"
+                                
+                                if player:
+                                    player.tell(msg1)
+                                    player.tell(msg2)
+                                
+                                message = "{}\n{}".format(msg1, msg2)
+                            else:
+                                message = "Currently running {} version {} (latest)".format(self.__class__.__name__, VERSION)
                             
-                            content = "{}>>> {}\n{}".format(server, msg1, msg2)
-                            return content
-                        else:
-                            content = "{}>>> Currently running {} version {} (latest)".format(server, self.__class__.__name__, VERSION)
-                            return content
-            except Exception as e:
-                message = "{}, message: {}".format(content, e)
-                minqlx.console_print(message)
-                return message
+                            break
+                except Exception as e:
+                    message = "{}, message: {}".format(message, e)
+                    minqlx.console_print(message)
 
-            return content
+            message = self.get_formatted_message(message)
+            return message
 
 
-    def get_server_name(self):
-        return self.game.hostname
+    def get_formatted_message(self, message):
+        server = self.game.hostname or "N/A"
+        formatted_message = "Server: {}\n>>> {}".format(server, message)
+        return formatted_message
                       
 
     @minqlx.thread
     def send_message(self, channel_id, message):
         if channel_id and message:
+            message = self.get_formatted_message(message)
             for channel in channel_id:
-                requests.post("https://discordapp.com/api/channels/" + channel + "/messages",
-                              data=json.dumps({'content': message}),
-                              headers={'Content-type': 'application/json',
-                                       'Authorization': 'Bot ' + self.discord_bot_token})
+                requests.post("https://discordapp.com/api/channels/" + channel + "/messages", data=json.dumps({'content': message}),
+                              headers={'Content-type': 'application/json', 'Authorization': 'Bot ' + self.discord_bot_token})

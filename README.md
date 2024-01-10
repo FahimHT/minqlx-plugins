@@ -2,7 +2,7 @@
 
 ## Requirements
 
-The plug-in(s) are tested on the following python versions: `3.5.3, 3.7.3, 3.10.12, 3.11.4`.
+Python `3.7.3` or above should be available.
 
 Required libraries listed in `requirements.txt` should be installed by running the following command in the `minqlx-plugins` folder:
 ```
@@ -39,6 +39,9 @@ python3 -m pip install -r requirements.txt
 - Allows Discord channel members to view current game state using the `.ql` command.
 - Allows members to check the deployed plug-in version using the `.ver` command.
 - If an error occurs processing a command from the bot owner, the bot respond with an appropriate message.
+
+### Python Versions
+The plug-in has been tested on following versions: `3.5.3, 3.7.3, 3.10.12, 3.11.4`.
 
 ### Setup
 - [Create a Discord bot](https://discordpy.readthedocs.io/en/stable/discord.html) (remember to note down the bot token) and invite it to your server. 
