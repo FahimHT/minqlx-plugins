@@ -11,7 +11,7 @@ python3 -m pip install -r requirements.txt
 ## Setup
 
 - Copy the plug-in `.py` file(s) to the **Quake Live Dedicated Server**'s `minqlx-plugins` folder.
-- Add the plug-in(s) to the `qlx_plugins` cvar that specifies the list of plug-in to load for `minqlx`. Depending upon how the server is set-up, the cvar should be specified in one of the following locations: `autoexec.cfg`, `server.cfg`, as a command line parameter or in the `environment` section in `docker-compose.yml`.
+- Add the plug-in(s) to the `qlx_plugins` cvar that specifies the list of plug-in to load for `minqlx`. Depending upon how the server is set up, the cvar should be specified in one of the following locations: `autoexec.cfg`, `server.cfg`, as a command line parameter or in the `environment` section in `docker-compose.yml`.
   
   #### Example
   `autoexec.cfg` or `server.cfg`:
@@ -38,14 +38,14 @@ python3 -m pip install -r requirements.txt
 - Checks whether a newer version of the plug-in is available in the repository and informs when the server owner (set using the minqlx cvar `qlx_owner`) joins the game.
 - Allows Discord channel members to view current game state using the `.ql` command.
 - Allows members to check the deployed plug-in version using the `.ver` command.
-- If an error occurs processing a command from the bot owner, the bot respond with an appropriate message.
+- If an error occurs processing a command from the bot owner, the bot responds with an appropriate message.
 
 ### Python Versions
-The plug-in has been tested on following versions: `3.5.3, 3.7.3, 3.10.12, 3.11.4`.
+The plug-in has been tested on the following versions: `3.5.3, 3.7.3, 3.10.12, 3.11.4`.
 
 ### Setup
 - [Create a Discord bot](https://discordpy.readthedocs.io/en/stable/discord.html) (remember to note down the bot token) and invite it to your server. 
-- [Add the Message Content Intent](https://discordpy.readthedocs.io/en/latest/intents.html) for the bot (required for bot commands to works).
+- [Add the Message Content Intent](https://discordpy.readthedocs.io/en/latest/intents.html) for the bot (required for bot commands to work).
 - Add the following plug-in cvars in `autoexec.cfg` or `server.cfg`.
 - The `qlx_discord_bot_token` cvar is required.
 - Specify a comma separated list of channels for the bot to post in.
